@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>绘兰材料 · 研发提效AI Agent系统 v2.0</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <span class="icon">🧪</span>
+    <span>绘兰材料 · 研发提效AI Agent</span>
+    <span class="badge" id="version-badge">v2.0 联网版</span>
+  </div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="switchPage('dashboard', this)">📊 总览看板</div>
+    <div class="nav-tab" onclick="switchPage('iteration', this)">🔄 配方迭代闭环</div>
+    <div class="nav-tab" onclick="switchPage('knowledge', this)">🔍 知识检索</div>
+    <div class="nav-tab" onclick="switchPage('design', this)">📋 实验设计</div>
+    <div class="nav-tab" onclick="switchPage('review', this)">📈 实验复盘</div>
+    <div class="nav-tab" onclick="switchPage('settings', this)">⚙️ 系统设置</div>
+  </div>
+  <div id="status-badge" class="badge">检查中...</div>
+</div>
+
+<div class="main-content">
+
+<!-- ============================================ -->
+<!-- 页面1: 总览看板 -->
+<!-- ============================================ -->
+<div id="page-dashboard" class="page active">
+  <div class="card">
+    <div class="card-title"><span class="icon">📋</span> 系统状态</div>
+    <div class="grid-4">
+      <div class="metric-card">
+        <div class="value" id="stat-rag-docs" style="color:var(--primary);">-</div>
+        <div class="label">知识库文档数</div>
+      </div>
+      <div class="metric-card">
+        <div class="value" id="stat-rag-chunks" style="color:var(--success);">-</div>
+        <div class="label">文本块数量</div>
+      </div>
+      <div class="metric-card">
+        <div class="value" id="stat-llm" style="color:var(--warning);">-</div>
+        <div class="label">LLM状态</div>
+      </div>
+      <div class="metric-card">
+        <div class="value" id="stat-web" style="color:var(--gray-700);">✓</div>
+        <div class="label">联网搜索</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🔄</span> 配方迭代闭环</div>
+    <div class="card-subtitle">Agent辅助（蓝色）与人工操作（绿色）交替，关键节点保留人工审批</div>
+    <div class="flow-container" id="flow-diagram"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🤖</span> 五大Agent</div>
+    <div class="grid-fluid" id="agent-cards"></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="icon">✅</span> Agent可以做</div>
+      <div id="can-do-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">🚫</span> Agent不可以做</div>
+      <div id="cannot-do-list"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">📡</span> 数据来源</div>
+    <div class="grid-4" id="data-sources"></div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- 页面2: 配方迭代闭环 -->
+<!-- ============================================ -->
+<div id="page-iteration" class="page">
+  <div class="card">
+    <div class="card-title"><span class="icon">🔄</span> 目标性能驱动的配方迭代闭环</div>
+    <div class="card-subtitle">真实联网搜索 + RAG知识库 + LLM推理（未配置LLM时使用规则引擎）</div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; padding:12px; background:var(--gray-50); border-radius:8px;">
+      <div id="step-indicator" style="display:flex; gap:8px; flex-wrap:wrap; width:100%;"></div>
+    </div>
+
+    <div id="iter-step1" class="iter-step">
+      <h3 style="margin-bottom:12px;">步骤1：目标性能输入</h3>
+      <div class="grid-2">
+        <div>
+          <div class="form-group"><label class="form-label">产品方向</label>
+            <select class="form-select" id="target-product">
+              <option value="UV固化胶">光学膜用UV固化胶</option>
+              <option value="导电胶">电子胶/导电胶</option>
+              <option value="UV减粘胶">半导体切割用UV减粘胶</option>
+              <option value="超疏水涂层">超疏水疏油硬化涂层</option>
+            </select></div>
+          <div class="form-group"><label class="form-label">透光率</label><input class="form-input" id="t-transmittance" value="≥92%"></div>
+          <div class="form-group"><label class="form-label">雾度</label><input class="form-input" id="t-haze" value="≤1%"></div>
+          <div class="form-group"><label class="form-label">黄变指数</label><input class="form-input" id="t-yellowing" value="ΔYI≤2"></div>
+        </div>
+        <div>
+          <div class="form-group"><label class="form-label">粘接强度</label><input class="form-input" id="t-adhesion" value="≥8MPa"></div>
+          <div class="form-group"><label class="form-label">粘度范围</label><input class="form-input" id="t-viscosity" value="800-1200cps"></div>
+          <div class="form-group"><label class="form-label">耐湿热(85℃/85%RH)</label><input class="form-input" id="t-humidity" value="≥80%"></div>
+          <div class="form-group"><label class="form-label">成本约束</label><input class="form-input" id="t-cost" value="不超过当前方案110%"></div>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">补充关键词（逗号分隔，用于联网搜索）</label>
+        <input class="form-input" id="t-keywords" placeholder="如 UV胶,低黄变,耐湿热,光学膜贴合" value="UV胶,低黄变,耐湿热"></div>
+      <div class="approval-banner"><span>⚠️</span><span>约束：仅使用现有库存原料 · 客户禁用物质清单作为硬约束 · 新原料/危化品需EHS审批</span></div>
+      <button class="btn btn-primary" onclick="runTargetAnalysis()" id="btn-step1">🤖 Agent解析目标性能 →</button>
+    </div>
+
+    <div id="iter-step2" class="iter-step" style="display:none;">
+      <h3 style="margin-bottom:12px;">步骤2：目标性能解析 <span class="tag tag-blue">Target Performance Agent</span></h3>
+      <div id="target-analysis-result"></div>
+      <button class="btn btn-primary" onclick="runKnowledgeSearch()" id="btn-step2">🔍 Agent检索历史实验+联网搜索 →</button>
+    </div>
+
+    <div id="iter-step3" class="iter-step" style="display:none;">
+      <h3 style="margin-bottom:12px;">步骤3：知识检索结果 <span class="tag tag-blue">Knowledge Agent</span></h3>
+      <div id="knowledge-search-result"></div>
+      <button class="btn btn-primary" onclick="runFormulaGeneration()" id="btn-step3">🧪 Agent生成候选配方 →</button>
+    </div>
+
+    <div id="iter-step4" class="iter-step" style="display:none;">
+      <h3 style="margin-bottom:12px;">步骤4：候选配方方向 <span class="tag tag-blue">Formula Agent</span></h3>
+      <div class="approval-banner"><span>👤</span><span>人工审批点：候选配方方向需研发负责人确认</span></div>
+      <div id="formula-candidates-result"></div>
+      <button class="btn btn-primary" onclick="runDOEGeneration()" id="btn-step4">📋 Agent生成DOE实验矩阵 →</button>
+    </div>
+
+    <div id="iter-step5" class="iter-step" style="display:none;">
+      <h3 style="margin-bottom:12px;">步骤5：DOE实验矩阵 <span class="tag tag-blue">Design Agent</span></h3>
+      <div class="approval-banner"><span>👤</span><span>人工审批点：DOE实验矩阵需实验室主管确认</span></div>
+      <div id="doe-result"></div>
+      <button class="btn btn-primary" onclick="showResultInput()">📝 录入实验结果 →</button>
+    </div>
+
+    <div id="iter-step6" class="iter-step" style="display:none;">
+      <h3 style="margin-bottom:12px;">步骤6：实验结果录入</h3>
+      <div class="alert alert-success">实验由研发人员手动完成（称量→混合→脱泡→涂布→固化→测试），Agent不直接控制设备。</div>
+      <p style="margin-bottom:8px;color:var(--gray-500);">录入实验结果（JSON格式），或使用示例数据：</p>
+      <textarea class="form-textarea" id="result-input-json" style="min-height:200px;font-family:monospace;font-size:12px;" placeholder='[{"id":"E01","results":{"transmittance":91.8,"haze":1.2,"yellowing":2.5,"adhesion":8.1,"viscosity":760,"humidityAging":72},"notes":"固化充分，轻微黄变"}]'></textarea>
+      <div style="margin-top:8px;">
+        <button class="btn btn-outline btn-sm" onclick="loadSampleResults()">加载示例数据</button>
+      </div>
+      <div style="margin-top:12px;"><button class="btn btn-primary" onclick="runExperimentReview()" id="btn-step6">📈 Agent评估实验结果 →</button></div>
+    </div>
+
+    <div id="iter-step7" class="iter-step" style="display:none;">
+      <h3 style="margin-bottom:12px;">步骤7：评估与下一轮建议 <span class="tag tag-blue">Review Agent</span></h3>
+      <div class="approval-banner"><span>👤</span><span>人工审批点：研发负责人确认是否进入下一轮实验</span></div>
+      <div id="review-result"></div>
+      <button class="btn btn-outline" onclick="resetIteration()">🔄 重新开始迭代</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- 页面3: 知识检索 -->
+<!-- ============================================ -->
+<div id="page-knowledge" class="page">
+  <div class="card">
+    <div class="card-title"><span class="icon">📂</span> 知识库管理</div>
+    <div class="card-subtitle">上传实验记录、配方文档、测试报告、SDS/TDS、专利文献（PDF/Word/Excel/TXT）</div>
+    <div style="margin-bottom:12px;">
+      <input type="file" id="file-upload" multiple accept=".pdf,.docx,.doc,.xlsx,.xls,.txt,.csv,.md"
+             style="display:none;" onchange="uploadFiles(this.files)">
+      <button class="btn btn-primary" onclick="document.getElementById('file-upload').click()">📤 上传文档</button>
+      <button class="btn btn-outline" onclick="loadRAGStats()">🔄 刷新</button>
+    </div>
+    <div id="rag-stats"></div>
+    <div id="rag-documents"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🔍</span> 知识检索</div>
+    <div class="grid-2" style="margin-bottom:12px;">
+      <div>
+        <div class="form-group"><label class="form-label">搜索范围</label>
+          <select class="form-select" id="search-scope">
+            <option value="all">全部（RAG + 联网）</option>
+            <option value="rag">仅RAG知识库</option>
+            <option value="patents">联网-专利</option>
+            <option value="literature">联网-文献</option>
+            <option value="materials">联网-原料</option>
+            <option value="web">联网-通用</option>
+          </select></div>
+        <div class="form-group"><label class="form-label">产品方向</label>
+          <select class="form-select" id="search-product">
+            <option value="UV固化胶">光学膜用UV固化胶</option>
+            <option value="导电胶">电子胶/导电胶</option>
+            <option value="UV减粘胶">半导体UV减粘胶</option>
+            <option value="超疏水涂层">超疏水硬化涂层</option>
+            <option value="">全部</option>
+          </select></div>
+      </div>
+      <div>
+        <div class="form-group"><label class="form-label">搜索关键词</label>
+          <input class="form-input" id="search-keywords" placeholder="如 UV胶 低黄变 耐湿热 光学膜" value="UV胶 低黄变 耐湿热"></div>
+        <div class="form-group"><label class="form-label">结果数量</label>
+          <select class="form-select" id="search-max">
+            <option value="3">3条</option>
+            <option value="5" selected>5条</option>
+            <option value="10">10条</option>
+          </select></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="runSearch()">🔍 开始搜索</button>
+  </div>
+  <div id="search-results"></div>
+</div>
+
+<!-- ============================================ -->
+<!-- 页面4: 实验设计 -->
+<!-- ============================================ -->
+<div id="page-design" class="page">
+  <div class="card">
+    <div class="card-title"><span class="icon">📋</span> DOE实验设计</div>
+    <div class="form-group"><label class="form-label">配方方向描述</label>
+      <textarea class="form-textarea" id="design-desc" placeholder="描述候选配方方向，如：基于脂肪族聚氨酯丙烯酸酯树脂A，使用PI-819光引发剂，添加硅烷偶联剂提升耐湿热...">基于脂肪族聚氨酯丙烯酸酯树脂A(40%)，IBOA(25%)，TPGDA(12%)，PI-819(2%)，偶联剂KH-570(0.8%)，BHT(0.3%)</textarea></div>
+    <button class="btn btn-primary" onclick="runDOEDesign()">📋 生成DOE实验矩阵</button>
+  </div>
+  <div id="design-results"></div>
+</div>
+
+<!-- ============================================ -->
+<!-- 页面5: 实验复盘 -->
+<!-- ============================================ -->
+<div id="page-review" class="page">
+  <div class="card">
+    <div class="card-title"><span class="icon">📈</span> 实验结果分析</div>
+    <div class="form-group"><label class="form-label">目标性能参考（JSON）</label>
+      <textarea class="form-textarea" id="review-target" style="font-family:monospace;font-size:12px;">{"transmittance":"≥92%","haze":"≤1%","yellowing":"ΔYI≤2","adhesion":"≥8MPa","viscosity":"800-1200cps","humidityAging":"≥80%"}</textarea></div>
+    <div class="form-group"><label class="form-label">实验结果数据（JSON数组）</label>
+      <textarea class="form-textarea" id="review-results" style="min-height:200px;font-family:monospace;font-size:12px;" placeholder='[{"id":"E01","results":{"transmittance":91.8,"haze":1.2,"yellowing":2.5,"adhesion":8.1,"viscosity":760,"humidityAging":72},"notes":"固化充分"}]'></textarea></div>
+    <button class="btn btn-outline btn-sm" onclick="loadSampleReviewData()">加载示例数据</button>
+    <div style="margin-top:8px;"><button class="btn btn-primary" onclick="runReview()">📈 开始分析</button></div>
+  </div>
+  <div id="review-page-results"></div>
+</div>
+
+<!-- ============================================ -->
+<!-- 页面6: 系统设置 -->
+<!-- ============================================ -->
+<div id="page-settings" class="page">
+  <div class="card">
+    <div class="card-title"><span class="icon">⚙️</span> LLM大模型配置</div>
+    <div class="alert alert-info">
+      配置LLM API后，Agent将使用大模型进行推理（目标拆解、配方生成、实验分析等）。未配置时使用规则引擎。
+      支持<strong>OpenAI / 通义千问 / DeepSeek / Azure OpenAI</strong>等OpenAI兼容API。
+    </div>
+    <div class="form-group"><label class="form-label">API Key</label>
+      <input class="form-input" id="llm-api-key" type="password" placeholder="sk-..."></div>
+    <div class="form-group"><label class="form-label">API Base URL</label>
+      <input class="form-input" id="llm-base-url" value="https://api.openai.com/v1" placeholder="https://api.openai.com/v1">
+      <div style="font-size:12px;color:var(--gray-400);margin-top:4px;">
+        通义千问: https://dashscope.aliyuncs.com/compatible-mode/v1 ｜ DeepSeek: https://api.deepseek.com
+      </div></div>
+    <div class="form-group"><label class="form-label">模型名称</label>
+      <input class="form-input" id="llm-model" value="gpt-4o-mini" placeholder="gpt-4o-mini / qwen-plus / deepseek-chat">
+      <div style="font-size:12px;color:var(--gray-400);margin-top:4px;">
+        通义千问: qwen-plus / qwen-max ｜ DeepSeek: deepseek-chat
+      </div></div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="llm-enabled"> 启用LLM推理
+      </label>
+    </div>
+    <button class="btn btn-primary" onclick="saveLLMConfig()">💾 保存配置</button>
+    <button class="btn btn-outline" onclick="loadLLMConfig()">🔄 加载当前配置</button>
+    <div id="llm-config-status" style="margin-top:12px;"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">ℹ️</span> 系统说明</div>
+    <div style="font-size:13px;line-height:1.8;color:var(--gray-600);">
+      <p><strong>数据安全：</strong>上传的文档存储在本地 data/uploads 目录，RAG索引存储在 data/kb 目录，不上传到外部服务器。</p>
+      <p><strong>LLM调用：</strong>启用LLM后，Agent会将RAG检索结果和联网搜索结果作为上下文发送给LLM进行推理。请确保API Key安全。</p>
+      <p><strong>联网搜索：</strong>使用DuckDuckGo搜索引擎，搜索专利、学术文献、原料资料等公开信息。</p>
+      <p><strong>规则引擎：</strong>未启用LLM时，系统使用内置规则引擎进行推理，结果基于预设逻辑和历史经验。</p>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
