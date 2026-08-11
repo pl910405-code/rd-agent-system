@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: rd-agent-system
+    env: docker
+    plan: free
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
