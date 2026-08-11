@@ -1,10 +1,12 @@
 services:
   - type: web
     name: rd-agent-system
-    env: docker
+    env: python
     plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python backend/server.py
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
-        value: "3.11"
+        value: "3.11.9"
