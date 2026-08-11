@@ -1,0 +1,25 @@
+__pycache__/
+*.pyc
+*.pyo
+data/
+*.pkl
+config.json
+*.log
+*.tmp
+node_modules/
+.ipynb_checkpoints/
+deployed_url.txt
+# Temp IP helper scripts
+get_ip.py
+get_ip2.py
+get_all_ips.py
+get_net_ips.py
+get_nic_ips.py
+ip_output.txt
+lan_ip.txt
+net_ips.txt
+nic_ips.txt
+all_ips.txt
+# Deploy helper
+deploy_to_hf.py
+create_space.py
